@@ -13,7 +13,6 @@ import matplotlib.font_manager as fm
 
 # フォント設定（IPAexゴシック or メイリオ）
 plt.rcParams['font.family'] = 'IPAexGothic'  # または 'Meiryo'
-import japanize_matplotlib
 
 def download_price_data(symbol, interval_mode):
     period_map = {"1d": "3mo", "1wk": "1y", "1mo": "5y"}
