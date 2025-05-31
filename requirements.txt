@@ -2,7 +2,6 @@ streamlit
 yfinance
 matplotlib
 pandas
-japanize-matplotlib
 openpyxl
 mplfinance
 xlrd
