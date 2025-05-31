@@ -9,7 +9,10 @@ from matplotlib.dates import date2num, DateFormatter
 import matplotlib.ticker as mticker
 from mplfinance.original_flavor import candlestick_ohlc
 import pandas as pd
-import japanize_matplotlib
+import matplotlib.font_manager as fm
+
+# フォント設定（IPAexゴシック or メイリオ）
+plt.rcParams['font.family'] = 'IPAexGothic'  # または 'Meiryo'
 
 
 def download_price_data(symbol, interval_mode):
