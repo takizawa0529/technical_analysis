@@ -14,9 +14,7 @@ import matplotlib.font_manager as fm
 # フォント設定（IPAexゴシック or メイリオ）
 plt.rcParams['font.family'] = 'IPAexGothic'  # または 'Meiryo'
 
-def download_price_data(symbol, interval_mode):
-    period_map = {"1d": "3mo", "1wk": "1y", "1mo": "5y"}
-    period = period_map.get(interval_mode, "3mo")
+def download_price_data(symbol, interval_mode, period):
     return yf.download(symbol, period=period, interval=interval_mode)
 
 
@@ -117,33 +115,62 @@ company_name = select_code['銘柄名']
 
 #print(symbol_input, company_name)
 #interval = st.selectbox("足種", options=["1d", "1wk", "1mo"], format_func=lambda x: {"1d": "日足", "1wk": "週足", "1mo": "月足"}[x])
-interval = st.radio(
+interval_map_jp = {
+    "日足":   "1d",
+    "週足":   "1wk",
+    "月足":   "1mo"
+}
+interval_option = st.radio(
     "足種",
-    options=["1d", "1wk", "1mo"],
-    format_func=lambda x: {"1d": "日足", "1wk": "週足", "1mo": "月足"}[x],
+    options=list(interval_map_jp.keys()),
+    index=list(interval_map_jp.keys()).index("日足"),
     horizontal=True  # 横並びにする
 )
+interval = interval_map_jp[interval_option]
+
+
+period_map_jp = {
+    "1日":  "1d",
+    "7日":  "7d",
+    "1ヶ月": "1mo",
+    "3ヶ月": "3mo",
+    "6ヶ月": "6mo",
+    "1年":   "1y",
+    "3年":  "3y",
+    "5年":   "5y"
+}
+
+period_option = st.selectbox(
+    "表示期間",
+    options=list(period_map_jp.keys()),
+    index=0
+)
+
+period = period_map_jp[period_option]
+
 
 show_bbands = st.radio('ボリンジャーバンドを表示しますか？', options=[True, False], horizontal=True)
 print(show_bbands)
 if st.button("チャート生成"):
-    save_path = f"./picture/{company_name}_{interval}.png"
+    safe_period = period_option.replace("月", "M").replace("年", "Y")
+    save_path = f"./picture/{company_name}_{interval}_{safe_period}.png"
     try:
         if save_path in os.listdir('./picture'):
-            st.image(f'./picture/{company_name}_{interval}.png', caption=f"{symbol_input} のチャート", use_container_width=True)
+            st.image(save_path, caption=f"{company_name} のチャート ({period_option}・{ {'1d':'日足','1wk':'週足','1mo':'月足'}[interval] })", use_container_width=True)
             st.success("キャッシュからチャートを表示しました。")
             st.stop()
 
         else:
-            df = download_price_data(symbol_input, interval)
-            if df.empty:
-                st.error("データが取得できませんでした。ティッカーコードや足種を確認してください。")
+            df_price = download_price_data(symbol_input, interval, period)
+            if df_price.empty:
+                st.error("データが取得できませんでした。ティッカーコードや足種、表示期間を確認してください。")
             else:
                 sma_settings = {"short": True, "mid": True, "long": True}
-                
-                df = calculate_indicators(df, sma_settings, show_bbands)
-                ohlc, df_plot = prepare_ohlc_data(df)
-                plot_chart(company_name, df, df_plot, ohlc, sma_settings, show_bbands, save_path=save_path)
-                st.image(save_path, caption=f"{company_name} のチャート", use_container_width=True)
+
+                df_with_ind = calculate_indicators(df_price, sma_settings, show_bbands)
+                ohlc, df_plot = prepare_ohlc_data(df_with_ind)
+                plot_chart(company_name, df_with_ind, df_plot, ohlc, sma_settings, show_bbands, save_path=save_path)
+                st.image(save_path, caption=f"{company_name} のチャート ({period_option}・{ {'1d':'日足','1wk':'週足','1mo':'月足'}[interval] })", use_container_width=True)
     except Exception as e:
         st.error(f"エラーが発生しました: {e}")
+
